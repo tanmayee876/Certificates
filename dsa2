@@ -1,0 +1,149 @@
+import java.rmi.*;
+import java.util.Scanner;
+
+public class Client {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        
+        try {
+            String serverURL = "rmi://localhost/Server";
+            // Look up the remote object 
+            /// serverinf object becasue the client acceess the remote object thr interface not thr the implemented class
+            ServerIntf serverIntf = (ServerIntf) Naming.lookup(serverURL);
+            //serverurl => where is the remote object is located 
+            
+            System.out.print("Enter First Number: ");
+            double num1 = sc.nextDouble();
+            
+            System.out.print("Enter Second Number: ");
+            double num2 = sc.nextDouble();
+            
+            System.out.println("First Number Is: " + num1);
+            System.out.println("Second Number Is: " + num2);
+            
+            System.out.println("----------- Results -----------");
+            System.out.println("Addition Is: " + serverIntf.Addition(num1, num2));
+            System.out.println("Subtraction Is: " + serverIntf.Subtraction(num1, num2));
+            System.out.println("Multiplication Is: " + serverIntf.Multiplication(num1, num2));
+            System.out.println("Division Is: " + serverIntf.Division(num1, num2));
+            
+        } catch (Exception e) {
+            System.out.println("Exception Occurred At Client! " + e.getMessage());
+        } finally {///finally block is used to execute code no matter what happens.
+            sc.close();
+        }
+    }
+}
+
+import java.rmi.*;
+import java.rmi.registry.*; /// becasue server stores the object in registry 
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            // This line replaces the manual 'rmiregistry' command
+            LocateRegistry.createRegistry(1099); 
+            
+            ServerImpl serverImpl = new ServerImpl();
+            Naming.rebind("Server", serverImpl);
+            
+            System.out.println("Server is running and waiting for client...");
+        } catch (Exception e) {
+            System.out.println("Server Error: " + e.getMessage());
+        }
+    }
+}   
+import java.rmi.*;
+import java.rmi.server.*;
+
+public class ServerImpl extends UnicastRemoteObject implements ServerIntf {
+
+    // Constructor is required to throw RemoteException
+	/// constrcture is used to intialize the remote objects 
+    public ServerImpl() throws RemoteException {
+        super();
+    }
+
+    public double Addition(double num1, double num2) throws RemoteException {
+        return num1 + num2;
+    }
+
+    public double Subtraction(double num1, double num2) throws RemoteException {
+        return num1 - num2;
+    }
+
+    public double Multiplication(double num1, double num2) throws RemoteException {
+        return num1 * num2;
+    }
+
+    public double Division(double num1, double num2) throws RemoteException {
+        if (num2 != 0) {
+            return num1 / num2;
+        } else {
+            System.out.println("Cannot Divide By Zero!");
+            return 0; // Return 0 or you could throw a user-defined exception
+        }
+    }
+}
+import java.rmi.*;
+
+public interface ServerIntf extends Remote {
+    public double Addition(double num1, double num2) throws RemoteException;
+    public double Subtraction(double num1, double num2) throws RemoteException;
+    public double Multiplication(double num1, double num2) throws RemoteException;
+    public double Division(double num1, double num2) throws RemoteException;
+}
+
+import java.util.*;
+
+public class TokenRing {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter Number Of Nodes You Want In The Ring : ");
+        int n = sc.nextInt();
+
+        System.out.println("Ring Formed Is As Below: ");
+        for (int i = 0; i < n; i++) {
+            System.out.print(i + " ");
+        }
+        System.out.println("0"); // Completes the ring visualization
+
+        int choice = 0;
+        int token = 0; // The token starts at node 0
+
+        do {
+            System.out.print("Enter Sender : ");
+            int sender = sc.nextInt();
+
+            System.out.print("Enter Receiver : ");
+            int receiver = sc.nextInt();
+
+            System.out.print("Enter Data To Send : ");
+            int data = sc.nextInt();
+
+            System.out.print("Token Passing : ");
+            // Moves token from current position to the sender
+            for (int i = token; i < sender; i++) {
+                System.out.print(i + "->");
+            }
+            System.out.println(sender);
+
+            System.out.println("Sender: " + sender + " Sending Data: " + data);
+
+            // Data travels from sender to receiver
+            for (int i = sender; i != receiver; i = (i + 1) % n) {
+                System.out.println("Data: " + data + " Forwarded By: " + i);
+            }
+
+            System.out.println("Receiver: " + receiver + " Received The Data: " + data);
+            
+            // The token now stays at the sender (or receiver, depending on your lab requirements)
+            token = sender; 
+
+            System.out.print("Do You Want To Send Data Again? If YES Enter 1, If NO Enter 0: ");
+            choice = sc.nextInt();
+
+        } while (choice == 1);
+        
+        sc.close();
